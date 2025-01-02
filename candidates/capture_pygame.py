@@ -12,7 +12,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Keypress Display")
 
 # Font settings
-font = pygame.font.SysFont("Arial", 72)
+font = pygame.font.SysFont("Arial", 300)
 
 # Colors
 WHITE = (255, 255, 255)

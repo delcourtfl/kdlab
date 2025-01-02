@@ -7,7 +7,7 @@ def main():
     def on_key_press(event):
         """Handles key press events and displays the pressed key."""
         canvas.delete("all")  # Clear the canvas
-        canvas.create_text(200, 200, text=event.char, font=("Arial", 72), fill="black")  # Display the key
+        canvas.create_text(200, 200, text=event.char, font=("Arial", 300), fill="black")  # Display the key
 
     # Create the main window
     root = tk.Tk()

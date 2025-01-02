@@ -14,7 +14,7 @@ def main():
     root.geometry("400x400")
     root.configure(bg="white")
 
-    label = tk.Label(root, text='Press Key', font=("Arial", 72), bg="white", fg="black")
+    label = tk.Label(root, text='Press Key', font=("Arial", 300), bg="white", fg="black")
     label.pack(expand=True)
 
     # Bind key press events
