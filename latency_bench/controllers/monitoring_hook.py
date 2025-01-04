@@ -1,5 +1,5 @@
-from ctypes import WINFUNCTYPE, c_long, c_int, Structure, cast, POINTER, windll, byref, c_longlong, c_void_p
-from ctypes.wintypes import LPARAM, WPARAM, DWORD
+from ctypes import WinError, get_last_error, WINFUNCTYPE, c_long, c_int, Structure, cast, POINTER, windll, byref, c_longlong, c_void_p
+from ctypes.wintypes import LPARAM, WPARAM, DWORD, HANDLE, HWND, MSG, ULONG, LONG
 import win32con
 import win32gui
 import win32api
@@ -81,3 +81,63 @@ class MonitoringHook:
         finally:
             self.remove_hook()
             print("Hook removed and exiting.")
+
+    #################################################################################
+    ### Event hook for monitoring window redraw events, but doesn't work properly ###
+
+    @WINFUNCTYPE(None, HANDLE, DWORD, HWND, LONG, LONG, DWORD, DWORD)
+    def event_callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
+        print(f"Event: {hex(event)}, hwnd: {hwnd}, idObject: {idObject}, idChild: {idChild}, dwEventThread: {dwEventThread}, dwmsEventTime: {dwmsEventTime}")
+
+    def set_process_hook(self, process):
+        process_id = process.pid
+
+        EVENT_OBJECT_LOCATIONCHANGE = 0x800B
+        WINEVENT_OUTOFCONTEXT = 0x0000
+        WINEVENT_SKIPOWNTHREAD = 0x0001
+        WINEVENT_SKIPOWNPROCESS = 0x0002
+        WINEVENT_INCONTEXT = 0x0004
+
+        # Set up the event hook
+        self.event_hook = windll.user32.SetWinEventHook(
+            0x8000,  # Min-Max Events to monitor
+            0x8010,  
+            None,                  # No DLL module handle
+            MonitoringHook.event_callback,          # Callback function
+            process_id,            # Process ID (0 means all processes)
+            0,                     # Thread ID (0 means all threads)
+            WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS  # Flags: Out of context
+        )
+
+        if not self.event_hook:
+            raise WinError(get_last_error())
+        
+    def run_process_hook(self, process):
+        try:
+            msg = MSG()
+            timeout = 60
+            start_time = time.time()
+            PM_REMOVE = 0x0001
+
+            while True:
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    print("Timeout reached. Exiting...")
+                    break
+
+                if windll.user32.PeekMessageW(byref(msg), None, 0, 0, PM_REMOVE):
+                    windll.user32.TranslateMessage(byref(msg))
+                    windll.user32.DispatchMessageW(byref(msg))
+
+                # if user32.GetMessageW(byref(msg), None, 0, 0) > 0:
+                #     user32.TranslateMessage(byref(msg))
+                #     user32.DispatchMessageW(byref(msg))
+                # else:
+                #     break  # Exit if no messages are pending
+
+        except KeyboardInterrupt:
+            print("Exiting...")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        finally:
+            windll.user32.UnhookWinEvent(self.event_hook)
