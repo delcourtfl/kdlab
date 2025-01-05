@@ -18,7 +18,7 @@ font = pygame.font.SysFont("Arial", 300)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-def display_key(key, cached_surfaces):
+def display_key(key):
     """Displays the pressed key at the center of the screen."""    
     screen.fill(WHITE)  # Clear the screen with a white background
     text_surface = font.render(key, True, BLACK)

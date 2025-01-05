@@ -42,8 +42,8 @@ class DisplayRecorder:
 
         if self.width <= 0 or self.height <= 0:
             raise ValueError("Invalid window dimensions.")
-        print(f"Window dimensions: {self.width}x{self.height}")
-        print(f"Window position: ({self.left}, {self.top})")
+        # print(f"Window dimensions: {self.width}x{self.height}")
+        # print(f"Window position: ({self.left}, {self.top})")
 
     def capture_window(self, save_file=None):
 

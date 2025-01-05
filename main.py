@@ -12,6 +12,8 @@ import time
 import gc
 import os
 
+import pstats
+
 # Benchmarking
 # Keypress event
 # Display change event
@@ -39,7 +41,6 @@ class Benchmark:
         for file in self.candidate_files:
             print(f"Running benchmark for file: {file}")
             self.run(file)
-            # return
 
     def run(self, script_path=None):
 
@@ -96,7 +97,91 @@ class Benchmark:
             
            # Gracefully terminate the process
             if process.poll() is None:  # Check if process is still running
-                print("Terminating subprocess...")
+                # print("Terminating subprocess...")
+                process.terminate()  # Send SIGTERM signal
+                process.wait(timeout=2)
+
+        except subprocess.CalledProcessError as e:
+            print(f"Script failed with error code {e.returncode}")
+            print("Error output:")
+            print(e.stderr)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        finally:
+            if process.poll() is None:  # Ensure process is terminated
+                process.kill()
+                process.wait()
+
+            stdout, stderr = process.communicate()
+            print("Subprocess terminated.")
+            if stdout:
+                print("Output:", stdout)
+            if stderr:
+                print("Errors:", stderr)
+
+
+    def run_all_with_profiler(self):
+        for file in self.candidate_files:
+            print(f"Running benchmark with profiler for file: {file}")
+            self.run_with_profiler(file)
+
+    def run_with_profiler(self, script_path=None):
+
+        if not script_path:
+            raise ValueError("Script path not provided.")
+        
+
+        file_path = data_folder / script_path.stem  # Get the file name without extension
+        save_path = file_path.with_suffix(".png")   # Change the extension to '.png'
+        prof_path = file_path.with_suffix(".prof")   # Change the extension to '.png'
+
+        # Run the script in a subprocess
+        try:
+            process = subprocess.Popen(
+                ["python", "-m", "cProfile", "-o", str(prof_path), str(script_path)],
+                stdout=subprocess.PIPE,  # Capture stdout if needed
+                stderr=subprocess.PIPE,  # Capture stderr if needed
+                text=True                # Output as strings, not bytes
+            )
+
+            time.sleep(5)
+            self.display_recorder = DisplayRecorder("Keypress Display")
+            self.input_controller = InputController(self.display_recorder.hwnd)
+
+            # Press the 'a' key to reset the display
+            win32gui.SetForegroundWindow(self.display_recorder.hwnd)
+            self.input_controller.toggle_key_scancode(0x10)
+            time.sleep(0.5)
+            self.display_recorder.set_objective()
+            self.display_recorder.capture_window(save_path)
+
+            # Press the space key to reset the display
+            win32gui.SetForegroundWindow(self.display_recorder.hwnd)
+            self.input_controller.toggle_key_scancode(0x39)
+            time.sleep(0.5)
+            self.display_recorder.set_initial()
+
+            if self.display_recorder.initial_data == self.display_recorder.objective_data:
+                raise ValueError("Failed to send key press event.")
+
+            print("Sending key press event")
+
+            # Disable garbage collection (see timeit.py library)
+            gcold = gc.isenabled()
+            gc.disable()
+            try:
+                # Warmup
+                self.warmup()
+                # Benchmark
+                average_time = self.benchmark()
+                print(f"Average time: {average_time} ns")
+            finally:
+                if gcold:
+                    gc.enable()
+            
+           # Gracefully terminate the process
+            if process.poll() is None:  # Check if process is still running
+                # print("Terminating subprocess...")
                 process.terminate()  # Send SIGTERM signal
                 process.wait(timeout=2)
 
@@ -157,10 +242,46 @@ class Benchmark:
 
         return average_time
 
+    def process_prof_files(self):
+        """Process all .prof files in the 'data' folder."""
+        # Loop through the 'data' folder to find .prof files
+        for prof_file in data_folder.iterdir():
+            if prof_file.suffix == ".prof":
+                print(f"Processing {prof_file}")
+                
+                # Open the .prof file and use pstats to process it
+                try:
+                    p = pstats.Stats(prof_file)
+                    p.sort_stats('cumulative').print_stats(10)
+                except Exception as e:
+                    print(f"Error processing {prof_file}: {e}")
+
+            if prof_file.suffix == ".prof":
+                print(f"Processing {prof_file}")
+                
+                # Create the output file path (e.g., output_{filename}.txt)
+                output_file = data_folder / f"{prof_file.stem}_output.txt"
+                
+                try:
+                    # Open the .prof file and use pstats to process it
+                    p = pstats.Stats(prof_file)
+                    
+                    # Save the result to a file instead of printing it
+                    with open(output_file, 'w') as f:
+                        # Redirect the output to the file
+                        p.sort_stats('cumulative').stream = f
+                        p.print_stats(10)
+                        
+                    print(f"Output saved to {output_file}")
+                except Exception as e:
+                    print(f"Error processing {prof_file}: {e}")
 
 def main():
     benchmark = Benchmark()
-    benchmark.run_all()
+    benchmark.run_all_with_profiler()
+
+    # Iterate through each .prof file
+    benchmark.process_prof_files()
 
 if __name__ == "__main__":
     main()
