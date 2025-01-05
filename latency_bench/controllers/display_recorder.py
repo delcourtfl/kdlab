@@ -1,5 +1,5 @@
 from ctypes import WINFUNCTYPE, c_int, Structure, cast, POINTER, windll, byref, sizeof, c_longlong, c_long, c_void_p, create_string_buffer, c_buffer
-from ctypes.wintypes import LPARAM, WPARAM, DWORD, LONG, BOOL, MSG
+from ctypes.wintypes import LPARAM, WPARAM, DWORD, LONG, BOOL, MSG, RECT
 from struct import pack, calcsize
 import win32con
 import win32gui
@@ -35,55 +35,69 @@ class DisplayRecorder:
         self.thread_id, self.process_id = win32process.GetWindowThreadProcessId(self.hwnd)
         print(f"Thread ID: {self.thread_id}, Process ID: {self.process_id}")
 
-    def capture_window(self):
         # Get the window dimensions
-        left, top, right, bot = win32gui.GetClientRect(self.hwnd)
+        self.left, self.top, self.right, self.bot = win32gui.GetClientRect(self.hwnd)
 
-        width = right - left
-        height = bot - top
+        self.width = self.right - self.left
+        self.height = self.bot - self.top
 
-        if width <= 0 or height <= 0:
+        if self.width <= 0 or self.height <= 0:
             raise ValueError("Invalid window dimensions.")
-        print(f"Window dimensions: {width}x{height}")
-        print(f"Window position: ({left}, {top})")
+        print(f"Window dimensions: {self.width}x{self.height}")
+        print(f"Window position: ({self.left}, {self.top})")
+
+        # # Get the device contexts
+        # self.hwindc = win32gui.GetWindowDC(self.hwnd)
+        # self.srcdc = win32ui.CreateDCFromHandle(self.hwindc)
+        # self.memdc = self.srcdc.CreateCompatibleDC()
+
+        # # Create a bitmap object
+        # self.bmp = win32ui.CreateBitmap()
+        # self.bmp.CreateCompatibleBitmap(self.srcdc, self.width, self.height)
+        # self.memdc.SelectObject(self.bmp)
+
+    def capture_window(self):
+
+        rect = RECT()
+        DWMWA_EXTENDED_FRAME_BOUNDS = 9
+        result = windll.dwmapi.DwmGetWindowAttribute(self.hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, byref(rect), sizeof(rect))
+        print(result)
+        print(rect.left, rect.top, rect.right, rect.bottom)
 
         # Get the device contexts
-        hwindc = win32gui.GetWindowDC(self.hwnd)
-        srcdc = win32ui.CreateDCFromHandle(hwindc)
-        memdc = srcdc.CreateCompatibleDC()
+        self.hwindc = win32gui.GetWindowDC(self.hwnd)
+        self.srcdc = win32ui.CreateDCFromHandle(self.hwindc)
+        self.memdc = self.srcdc.CreateCompatibleDC()
 
         # Create a bitmap object
-        bmp = win32ui.CreateBitmap()
-        bmp.CreateCompatibleBitmap(srcdc, width, height)
-        memdc.SelectObject(bmp)
+        self.bmp = win32ui.CreateBitmap()
+        self.bmp.CreateCompatibleBitmap(self.srcdc, self.width, self.height)
+        self.memdc.SelectObject(self.bmp)
 
-        # Copy the screen content into the bitmap
-        result = memdc.BitBlt((0, 0), (width, height), srcdc, (0, 0), win32con.SRCCOPY)
+        # Copy the screen content into the bitmap (with offset for obscure win11 reasons ¯\_(ツ)_/¯)
+        result = self.memdc.BitBlt((0, 0), (self.width, self.height), self.srcdc, (8, 32), win32con.SRCCOPY)
 
         # Save bitmap data as bytes
-        bmp_info = bmp.GetInfo()
-        bmp_data = bmp.GetBitmapBits(True)
-
-        print(bmp_info)
+        bmp_info = self.bmp.GetInfo()
+        bmp_data = self.bmp.GetBitmapBits(True)
 
         im = Image.frombuffer(
             'RGB',
             (bmp_info['bmWidth'], bmp_info['bmHeight']),
             bmp_data, 'raw', 'BGRX', 
-            0,#(bmp_info['bmWidth'] * 3 + 3) & -4,
+            0,
             1,
         )
 
         # Clean up
-        memdc.DeleteDC()
-        srcdc.DeleteDC()
-        win32gui.ReleaseDC(self.hwnd, hwindc)
-        win32gui.DeleteObject(bmp.GetHandle())
+        self.memdc.DeleteDC()
+        self.srcdc.DeleteDC()
+        win32gui.ReleaseDC(self.hwnd, self.hwindc)
+        win32gui.DeleteObject(self.bmp.GetHandle())
 
         if result is None:
             # PrintWindow Succeeded
-            print("Saving picture")
-            im.save("restore_test.png")
+            im.save("maybe_test.png")
 
         return bmp_data, bmp_info
     
@@ -112,6 +126,9 @@ class DisplayRecorder:
         windll.user32.ReleaseDC(self.hwnd,dc) # release retrieved dc
         return
         ###########################
+
+    def compare_images(self, image1, image2):
+        return image1 == image2
 
     def hash_image(self, data):
         return hashlib.sha256(data).hexdigest()
