@@ -19,14 +19,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 def display_key(key, cached_surfaces):
-    """Displays the pressed key at the center of the screen."""
-    # if key not in cached_surfaces:
-    #     # Create and cache the text surface if not already cached
-    #     text_surface = font.render(key, True, BLACK)
-    #     cached_surfaces[key] = text_surface
-    # else:
-    #     text_surface = cached_surfaces[key]
-    
+    """Displays the pressed key at the center of the screen."""    
     screen.fill(WHITE)  # Clear the screen with a white background
     text_surface = font.render(key, True, BLACK)
     text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
@@ -36,14 +29,13 @@ def display_key(key, cached_surfaces):
 def main():
     """Main loop to capture keypresses and display them."""
     running = True
-    cached_surfaces = {}
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  # Exit when the window is closed
                 running = False
             elif event.type == pygame.KEYDOWN:  # Detect key press
                 key_pressed = event.unicode  # Get the character of the key pressed
-                display_key(key_pressed, cached_surfaces)  # Display the pressed key
+                display_key(key_pressed)  # Display the pressed key
     
     pygame.quit()  # Quit pygame
     sys.exit()  # Exit the program
