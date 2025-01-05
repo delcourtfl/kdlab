@@ -1,5 +1,6 @@
-from ctypes import WINFUNCTYPE, c_int, Structure, cast, POINTER, windll, byref, sizeof, c_longlong, c_long, c_void_p
+from ctypes import WINFUNCTYPE, c_int, Structure, cast, POINTER, windll, byref, sizeof, c_longlong, c_long, c_void_p, create_string_buffer, c_buffer
 from ctypes.wintypes import LPARAM, WPARAM, DWORD, LONG, BOOL, MSG
+from struct import pack, calcsize
 import win32con
 import win32gui
 import win32ui
@@ -35,20 +36,18 @@ class DisplayRecorder:
         print(f"Thread ID: {self.thread_id}, Process ID: {self.process_id}")
 
     def capture_window(self):
-        
-        windll.user32.SetProcessDPIAware()
-
         # Get the window dimensions
         left, top, right, bot = win32gui.GetClientRect(self.hwnd)
+
         width = right - left
         height = bot - top
 
         if width <= 0 or height <= 0:
             raise ValueError("Invalid window dimensions.")
         print(f"Window dimensions: {width}x{height}")
+        print(f"Window position: ({left}, {top})")
 
         # Get the device contexts
-        hdesktop = win32gui.GetDesktopWindow()
         hwindc = win32gui.GetWindowDC(self.hwnd)
         srcdc = win32ui.CreateDCFromHandle(hwindc)
         memdc = srcdc.CreateCompatibleDC()
@@ -65,23 +64,54 @@ class DisplayRecorder:
         bmp_info = bmp.GetInfo()
         bmp_data = bmp.GetBitmapBits(True)
 
+        print(bmp_info)
+
         im = Image.frombuffer(
             'RGB',
             (bmp_info['bmWidth'], bmp_info['bmHeight']),
-            bmp_data, 'raw', 'BGRX', 0, 1
+            bmp_data, 'raw', 'BGRX', 
+            0,#(bmp_info['bmWidth'] * 3 + 3) & -4,
+            1,
         )
 
         # Clean up
-        win32gui.DeleteObject(bmp.GetHandle())
         memdc.DeleteDC()
         srcdc.DeleteDC()
-        win32gui.ReleaseDC(hdesktop, hwindc)
+        win32gui.ReleaseDC(self.hwnd, hwindc)
+        win32gui.DeleteObject(bmp.GetHandle())
 
         if result is None:
             # PrintWindow Succeeded
-            im.save("test.png")
+            print("Saving picture")
+            im.save("restore_test.png")
 
         return bmp_data, bmp_info
+    
+    def old_capture_window(self):
+        ###########################
+        L,T,R,B = win32gui.GetClientRect(self.hwnd)
+        w,h = R-L,B-T
+
+        dc = windll.user32.GetWindowDC(self.hwnd)
+        dc1 = windll.gdi32.CreateCompatibleDC(dc)
+        bmp1 = windll.gdi32.CreateCompatibleBitmap(dc, w, h)
+
+        PW_CLIENTONLY, PW_RENDERFULLCONTENT = 1, 2
+
+        obj1 = windll.gdi32.SelectObject(dc1,bmp1) # select bmp into dc
+        windll.user32.PrintWindow(self.hwnd, dc1, PW_CLIENTONLY|PW_RENDERFULLCONTENT) # render window to dc1
+        windll.gdi32.SelectObject(dc1, obj1) # restore dc's default obj
+
+        data = create_string_buffer((w*4)*h)
+        bmi = c_buffer(pack("IiiHHIIiiII",calcsize("IiiHHIIiiII"),w,-h,1,32,0,0,0,0,0,0))
+        windll.gdi32.GetDIBits(dc1,bmp1,0,h,byref(data),byref(bmi),win32con.DIB_RGB_COLORS)
+        img = Image.frombuffer('RGB',(w,h),data,'raw','BGRX')
+        img.save("new_test.png")
+
+        windll.gdi32.DeleteDC(dc1) # delete created dc
+        windll.user32.ReleaseDC(self.hwnd,dc) # release retrieved dc
+        return
+        ###########################
 
     def hash_image(self, data):
         return hashlib.sha256(data).hexdigest()

@@ -87,6 +87,8 @@ class Benchmark:
 
             print("Sending key press event")
             while True:
+                win32gui.SetForegroundWindow(self.display_recorder.hwnd)
+
                 ns_start = time.perf_counter_ns()
                 self.input_controller.press_key(0x41)
                 ns_end = self.display_recorder.start_monitoring()
