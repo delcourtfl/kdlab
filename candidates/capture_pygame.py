@@ -31,6 +31,7 @@ def main():
     running = True
     while running:
         for event in pygame.event.get():
+            print(event)
             if event.type == pygame.QUIT:  # Exit when the window is closed
                 running = False
             elif event.type == pygame.KEYDOWN:  # Detect key press
