@@ -65,14 +65,14 @@ class Benchmark:
 
             # Press the 'a' key to reset the display
             win32gui.SetForegroundWindow(self.display_recorder.hwnd)
-            self.input_controller.toggle_key(0x41)
+            self.input_controller.toggle_key_scancode(0x10)
             time.sleep(0.5)
             self.display_recorder.set_objective()
             self.display_recorder.capture_window(save_path)
 
             # Press the space key to reset the display
             win32gui.SetForegroundWindow(self.display_recorder.hwnd)
-            self.input_controller.toggle_key(0x20)
+            self.input_controller.toggle_key_scancode(0x39)
             time.sleep(0.5)
             self.display_recorder.set_initial()
 
@@ -128,10 +128,10 @@ class Benchmark:
             win32gui.SetForegroundWindow(self.display_recorder.hwnd)
 
             ns_start = time.perf_counter_ns()
-            self.input_controller.toggle_key(0x41)
+            self.input_controller.toggle_key_scancode(0x10)
             ns_end = self.display_recorder.start_monitoring()
 
-            self.input_controller.toggle_key(0x20)
+            self.input_controller.toggle_key_scancode(0x39)
             self.display_recorder.start_monitoring_initial()
 
     def benchmark(self, max_iter=1000):
@@ -146,13 +146,13 @@ class Benchmark:
             win32gui.SetForegroundWindow(self.display_recorder.hwnd)
 
             ns_start = time.perf_counter_ns()
-            self.input_controller.toggle_key(0x41)
+            self.input_controller.toggle_key_scancode(0x10)
             ns_end = self.display_recorder.start_monitoring()
             time_taken = ns_end - ns_start
             # print(f"Time taken: {time_taken} ns")
             average_time = (average_time * (cnt - 1) + time_taken) / cnt
 
-            self.input_controller.toggle_key(0x20)
+            self.input_controller.toggle_key_scancode(0x39)
             self.display_recorder.start_monitoring_initial()
 
         return average_time

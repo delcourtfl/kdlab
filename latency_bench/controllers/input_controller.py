@@ -45,7 +45,7 @@ class InputController:
 
         self.post_message = windll.user32.PostMessageW
     
-    def send_key_event(self, vk_code, event_type=KEYEVENTF_KEYDOWN):
+    def send_virtualkey_event(self, vk_code, event_type=KEYEVENTF_KEYDOWN):
         # Create an INPUT structure
         input_structure = INPUT()
         input_structure.type = INPUT_KEYBOARD
@@ -60,13 +60,7 @@ class InputController:
         # Send the input event (simulate key press or release)
         self.send_input(1, POINTER(INPUT)(input_structure), sizeof(INPUT))
 
-    def post_key_msg(self, vk_code, event_type=KEYEVENTF_KEYDOWN):
-        # Not working ?
-        if not self.hwnd:
-            raise ValueError("No window handle provided.")
-        self.post_message(self.hwnd, event_type, vk_code, 0)
-
-    def send_key_event_scancode(self, scan_code, event_type=KEYEVENTF_KEYDOWN):
+    def send_scancode_event(self, scan_code, event_type=KEYEVENTF_KEYDOWN):
         # Create an INPUT structure for the scan code
         input_structure = INPUT()
         input_structure.type = INPUT_KEYBOARD
@@ -79,27 +73,32 @@ class InputController:
         )
         
         # Send the input event
-        windll.user32.SendInput(1, POINTER(INPUT)(input_structure), sizeof(INPUT))
+        self.send_input(1, POINTER(INPUT)(input_structure), sizeof(INPUT))
+
+    def post_key_msg(self, vk_code, event_type=KEYEVENTF_KEYDOWN):
+        # Not working ?
+        if not self.hwnd:
+            raise ValueError("No window handle provided.")
+        self.post_message(self.hwnd, event_type, vk_code, 0)
     
     def press_key(self, vk_code):
-        # wsh.AppActivate("Keypress Display")
-        # wsh.SendKeys("{NUMLOCK}a")
-        # pyautogui.keyDown("a")
-        # self.keyboard = Controller()
-        # self.keyboard.press('a')
-        self.send_key_event_scancode(0x1E, KEYEVENTF_KEYDOWN)
-        pass
+        self.send_virtualkey_event(vk_code, KEYEVENTF_KEYDOWN)
     
     def release_key(self, vk_code):
-        # wsh.AppActivate("Keypress Display")
-        # wsh.SendKeys("")
-        # pyautogui.keyUp("a")
-        # keyboard = Controller()
-        # self.keyboard.release('a')
-        self.send_key_event_scancode(0x1E, KEYEVENTF_KEYUP)
-        pass
+        self.send_virtualkey_event(vk_code, KEYEVENTF_KEYUP)
 
-    def toggle_key(self, vk_code):
-        self.press_key(vk_code)
+    def press_key(self, scan_code):
+        self.send_scancode_event(scan_code, KEYEVENTF_KEYDOWN)
+    
+    def release_key(self, scan_code):
+        self.send_scancode_event(scan_code, KEYEVENTF_KEYUP)
+
+    def toggle_key_virtualkey(self, scan_code):
+        self.press_key(scan_code)
         # time.sleep(0.5)
-        self.release_key(vk_code)
+        self.release_key(scan_code)
+
+    def toggle_key_scancode(self, scan_code):
+        self.press_key(scan_code)
+        # time.sleep(0.5)
+        self.release_key(scan_code)
