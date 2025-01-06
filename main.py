@@ -269,9 +269,8 @@ class Benchmark:
 def main():
     benchmark = Benchmark()
     benchmark.run_all_with_profiler()
-
     # Iterate through each .prof file
-    # benchmark.process_prof_files()
+    benchmark.process_prof_files()
 
 if __name__ == "__main__":
     main()
