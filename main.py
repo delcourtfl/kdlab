@@ -120,12 +120,12 @@ class Benchmark:
                 print("Errors:", stderr)
 
 
-    def run_all_with_profiler(self):
+    def run_all_with_cprofile(self):
         for file in self.candidate_files:
             print(f"Running benchmark with profiler for file: {file}")
-            self.run_with_profiler(file)
+            self.run_with_cprofile(file)
 
-    def run_with_profiler(self, script_path=None):
+    def run_with_cprofile(self, script_path=None):
 
         if not script_path:
             raise ValueError("Script path not provided.")
@@ -268,7 +268,7 @@ class Benchmark:
 
 def main():
     benchmark = Benchmark()
-    benchmark.run_all_with_profiler()
+    benchmark.run_all_with_cprofile()
     # Iterate through each .prof file
     benchmark.process_prof_files()
 
