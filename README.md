@@ -32,13 +32,11 @@ Should I run them in // ? Could they interfere with each others ? Won't it impac
 ## Isolated Env ?
 ## Screen Refresh Rate ?
 
-
 https://github.com/msaroufim/awesome-profiling
 
 ### How to Debug
 # Slower CPU + GPU
 # More inputs and get average
-
 
 What I trie to benchmark
 - Windows Hooks
