@@ -82,20 +82,6 @@ class DisplayRecorder:
         win32gui.DeleteObject(self.bmp.GetHandle())
 
         return bmp_data, bmp_info
-    
-    def compare_bmp_value_by_value(self, data1, data2):
-        """
-        Compare two BMP data byte arrays value by value.
-        """
-        if len(data1) != len(data2):
-            return False  # Different sizes, cannot be identical
-
-        # Direct value-by-value comparison
-        for byte1, byte2 in zip(data1, data2):
-            if byte1 != byte2:
-                return False  # Mismatch found
-
-        return True  # All values match
 
     def compare_images(self, image1, image2):
         return image1 == image2
