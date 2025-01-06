@@ -32,7 +32,7 @@ class DisplayRecorder:
 
         # Get window details
         self.thread_id, self.process_id = win32process.GetWindowThreadProcessId(self.hwnd)
-        print(f"Thread ID: {self.thread_id}, Process ID: {self.process_id}")
+        # print(f"Thread ID: {self.thread_id}, Process ID: {self.process_id}")
 
         # Get the window dimensions
         self.left, self.top, self.right, self.bot = win32gui.GetClientRect(self.hwnd)
