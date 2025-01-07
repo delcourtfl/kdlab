@@ -1,5 +1,5 @@
 from ctypes import POINTER, sizeof, WinError, get_last_error, windll, c_int
-from ctypes.wintypes import UINT
+from ctypes.wintypes import UINT, HWND, WPARAM, LPARAM, BOOL
 import time
 
 from latency_bench.struct import INPUT, KEYBDINPUT
@@ -15,6 +15,7 @@ INPUT_KEYBOARD = 1
 KEYEVENTF_KEYDOWN = 0x0000
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_SCANCODE = 0x0008  # Indicate that a scan code is being sent
+WM_CLOSE = 0x0010
 
 # Virtual Key Codes (some examples)
 VK_A = 0x41
@@ -44,6 +45,8 @@ class InputController:
         self.send_input.errcheck = zerocheck
 
         self.post_message = windll.user32.PostMessageW
+        self.post_message.argtypes = HWND, UINT, WPARAM, LPARAM
+        self.post_message.restype = BOOL
     
     def send_virtualkey_event(self, vk_code, event_type=KEYEVENTF_KEYDOWN):
         # Create an INPUT structure
@@ -79,7 +82,19 @@ class InputController:
         # Not working ?
         if not self.hwnd:
             raise ValueError("No window handle provided.")
-        self.post_message(self.hwnd, event_type, vk_code, 0)
+        
+        result = self.post_message(self.hwnd, event_type, vk_code, 0)
+        if not result:
+            raise WinError(get_last_error())
+
+    def send_close_signal(self):
+        # Send a WM_CLOSE signal to the window to request graceful termination.
+        if not self.hwnd:
+            raise ValueError("No window handle provided.")
+        
+        result = self.post_message(self.hwnd, WM_CLOSE, 0, 0)
+        if not result:
+            raise WinError(get_last_error())
     
     def press_key(self, vk_code):
         self.send_virtualkey_event(vk_code, KEYEVENTF_KEYDOWN)

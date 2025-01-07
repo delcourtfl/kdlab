@@ -178,6 +178,9 @@ class Benchmark:
             finally:
                 if gcold:
                     gc.enable()
+
+            self.input_controller.send_close_signal()
+            time.sleep(1)
             
            # Gracefully terminate the process
             if process.poll() is None:  # Check if process is still running
@@ -259,7 +262,7 @@ class Benchmark:
                     # Save the result to a file instead of printing it
                     with open(output_file, 'w') as f:
                         # Redirect the output to the file
-                        p.sort_stats('cumulative').stream = f
+                        p.sort_stats('tottime').stream = f
                         p.print_stats(10)
                         
                     print(f"Output saved to {output_file}")
