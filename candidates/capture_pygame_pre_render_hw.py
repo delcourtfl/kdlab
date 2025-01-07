@@ -8,7 +8,9 @@ pygame.init()
 
 # Screen settings
 SCREEN_WIDTH, SCREEN_HEIGHT = 400, 400
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+# Hardware acceleration and double buffering
+screen = pygame.display.set_mode(size, pygame.HWSURFACE)
 pygame.display.set_caption("Keypress Display")
 
 # Font settings
@@ -18,14 +20,7 @@ font = pygame.font.SysFont("Arial", 300)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-def display_key(key):
-    """Displays the pressed key at the center of the screen."""    
-    screen.fill(WHITE)  # Clear the screen with a white background
-    # Render without anti-aliasing
-    text_surface = font.render(key, False, BLACK)
-    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-    screen.blit(text_surface, text_rect)
-    pygame.display.flip()  # Update the display
+pre_rendered_key_surfaces = {}
 
 def main():
     """Main loop to capture keypresses and display them."""
@@ -36,7 +31,15 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:  # Detect key press
                 key_pressed = event.unicode  # Get the character of the key pressed
-                display_key(key_pressed)  # Display the pressed key
+
+                screen.fill(WHITE)
+                if key_pressed not in pre_rendered_key_surfaces:
+                    # Render without anti-aliasing
+                    pre_rendered_key_surfaces[key_pressed] = font.render(key_pressed, False, BLACK)  # Render and store the surface
+
+                text_rect = pre_rendered_key_surfaces[key_pressed].get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                screen.blit(pre_rendered_key_surfaces[key_pressed], text_rect)
+                pygame.display.flip()  # Update the display
     
     pygame.quit()  # Quit pygame
     sys.exit()  # Exit the program

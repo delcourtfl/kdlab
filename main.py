@@ -11,6 +11,7 @@ from pathlib import Path
 import time
 import gc
 import os
+from datetime import datetime
 
 import pstats
 
@@ -23,6 +24,13 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 data_folder = Path(ROOT_DIR) / "data"
 # Ensure the 'data' folder exists
 data_folder.mkdir(parents=True, exist_ok=True)
+
+# Create subfolders 'img/' and 'perf/'
+img_folder = data_folder / "img"
+perf_folder = data_folder / "perf"
+
+img_folder.mkdir(parents=True, exist_ok=True)
+perf_folder.mkdir(parents=True, exist_ok=True)
 
 class Benchmark:
     def __init__(self):
@@ -37,6 +45,8 @@ class Benchmark:
         self.candidate_files = [file for file in self.candidates_path.iterdir() if file.is_file()]
         print(f"Found {len(self.candidate_files)} files in candidates folder.")
 
+        self.results = {}
+
     def run_all(self):
         for file in self.candidate_files:
             print(f"Running benchmark for file: {file}")
@@ -48,7 +58,7 @@ class Benchmark:
             raise ValueError("Script path not provided.")
         
 
-        save_path = data_folder / script_path.stem  # Get the file name without extension
+        save_path = img_folder / script_path.stem  # Get the file name without extension
         save_path = save_path.with_suffix(".png")   # Change the extension to '.png'
 
         # Run the script in a subprocess
@@ -131,8 +141,9 @@ class Benchmark:
             raise ValueError("Script path not provided.")
         
 
-        file_path = data_folder / script_path.stem  # Get the file name without extension
+        file_path = img_folder / script_path.stem  # Get the file name without extension
         save_path = file_path.with_suffix(".png")   # Change the extension to '.png'
+        file_path = perf_folder / script_path.stem
         prof_path = file_path.with_suffix(".prof")   # Change the extension to '.prof'
 
         # Run the script in a subprocess
@@ -175,6 +186,7 @@ class Benchmark:
                 # Benchmark
                 average_time = self.benchmark()
                 print(f"Average time: {average_time} ns")
+                self.results[script_path.stem] = average_time
             finally:
                 if gcold:
                     gc.enable()
@@ -249,12 +261,12 @@ class Benchmark:
     def process_prof_files(self):
         """Process all .prof files in the 'data' folder."""
         # Loop through the 'data' folder to find .prof files
-        for prof_file in data_folder.iterdir():
+        for prof_file in perf_folder.iterdir():
             if prof_file.suffix == ".prof":
 
                 print(f"Processing {prof_file}")
                 # Create the output file path
-                output_file = data_folder / f"{prof_file.stem}.txt"
+                output_file = perf_folder / f"{prof_file.stem}.txt"
                 try:
                     # Open the .prof file and use pstats to process it
                     p = pstats.Stats(str(prof_file))
@@ -269,11 +281,27 @@ class Benchmark:
                 except Exception as e:
                     print(f"Error processing {prof_file}: {e}")
 
+    def save_results(self):
+        print("Saving results...")
+        sorted_results = sorted(self.results.items(), key=lambda item: item[1])
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        result_file = data_folder / f"results_{current_time}.txt"
+
+        with open(result_file, "w") as f:
+            f.write("Benchmark Results (ordered by latency):\n")
+            for key, value in sorted_results:
+                print(f"{key}: {value} ns")
+                f.write(f"{key}: {value} ns\n")
+
+
 def main():
     benchmark = Benchmark()
     benchmark.run_all_with_cprofile()
     # Iterate through each .prof file
     benchmark.process_prof_files()
+
+    benchmark.save_results()
 
 if __name__ == "__main__":
     main()
