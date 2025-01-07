@@ -42,7 +42,9 @@ class Benchmark:
             raise FileNotFoundError(f"Candidates folder not found at path: {self.candidates_path}")
         
         # Load all file paths in the folder
-        self.candidate_files = [file for file in self.candidates_path.iterdir() if file.is_file()]
+        self.candidate_files = [
+            file for file in self.candidates_path.iterdir() if file.is_file() and file.suffix == '.py'
+        ]
         print(f"Found {len(self.candidate_files)} files in candidates folder.")
 
         self.results = {}

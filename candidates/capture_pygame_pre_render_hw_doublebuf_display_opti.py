@@ -10,8 +10,11 @@ pygame.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 400, 400
 size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 # Hardware acceleration and double buffering
-screen = pygame.display.set_mode(size, pygame.HWSURFACE)
+screen = pygame.display.set_mode(size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+# Disable alpha channel for better performance
+screen.set_alpha(None)
 pygame.display.set_caption("Keypress Display")
+pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN])
 
 # Font settings
 font = pygame.font.SysFont("Arial", 300)
@@ -19,6 +22,8 @@ font = pygame.font.SysFont("Arial", 300)
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+
+CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 pre_rendered_key_surfaces = {}
 
@@ -37,9 +42,11 @@ def main():
                     # Render without anti-aliasing
                     pre_rendered_key_surfaces[key_pressed] = font.render(key_pressed, False, BLACK)  # Render and store the surface
 
-                text_rect = pre_rendered_key_surfaces[key_pressed].get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                text_rect = pre_rendered_key_surfaces[key_pressed].get_rect(center=CENTER)
                 screen.blit(pre_rendered_key_surfaces[key_pressed], text_rect)
-                pygame.display.flip()  # Update the display
+                
+                # Update only the area where the text was blitted
+                pygame.display.update(text_rect)  # Update the specific rectangle
     
     pygame.quit()  # Quit pygame
     sys.exit()  # Exit the program

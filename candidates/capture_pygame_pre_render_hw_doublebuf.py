@@ -35,7 +35,7 @@ def main():
                 screen.fill(WHITE)
                 if key_pressed not in pre_rendered_key_surfaces:
                     # Render without anti-aliasing
-                    pre_rendered_key_surfaces[key_pressed] = font.render(key_pressed, False, BLACK)  # Render and store the surface
+                    pre_rendered_key_surfaces[key_pressed] = font.render(key_pressed, True, BLACK)  # Render and store the surface
 
                 text_rect = pre_rendered_key_surfaces[key_pressed].get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
                 screen.blit(pre_rendered_key_surfaces[key_pressed], text_rect)

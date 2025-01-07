@@ -22,7 +22,7 @@ def display_key(key):
     """Displays the pressed key at the center of the screen."""    
     screen.fill(WHITE)  # Clear the screen with a white background
     # Render without anti-aliasing
-    text_surface = font.render(key, False, BLACK)
+    text_surface = font.render(key, True, BLACK)
     text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
     screen.blit(text_surface, text_rect)
     pygame.display.flip()  # Update the display
