@@ -10,6 +10,8 @@
 #define BLACK RGB(0, 0, 0)
 
 // gcc -shared -o keypress_display_win32.dll keypress_display_win32.c -mwindows
+// gcc -shared -O2 -march=native -flto -o keypress_display_win32_O2.dll keypress_display_win32.c -mwindows
+// gcc -shared -O3 -march=native -flto -o keypress_display_win32_O3.dll keypress_display_win32.c -mwindows
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void DrawTextToWindow(HWND hwnd, const char* text, HFONT hFont);

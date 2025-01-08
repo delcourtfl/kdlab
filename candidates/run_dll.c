@@ -3,9 +3,13 @@
 
 typedef int (*MainFunc)();  // Define the function signature of 'main' in the DLL
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <dll file path>\n", argv[0]);
+        return 1;
+    }
     // Load the DLL
-    HMODULE hDll = LoadLibrary("keypress_display_win32.dll");  // Path to your DLL
+    HMODULE hDll = LoadLibrary(argv[1]);  // Path to your DLL
     if (hDll == NULL) {
         printf("Unable to load DLL: %lu\n", GetLastError());
         return 1;
