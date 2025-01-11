@@ -1,50 +1,19 @@
+# Key to Display Latency Benchmarking (KDLAB)
 
+Small project trying to evaluate the latency between a key press and its display of multiple implementations / frameworks.
 
-### First step
+## Description
 
-Inital simple program :
-Key press -> Windows/Linux App -> Display key pressed
+![kdlab architecture](res/kdlab.drawio.png)
 
-Better to create a generic testbench to compare results
+## Technologies Used
 
-2 Parts :
-    - Press/Display
-    - Latency measurement
+- [pywin32](https://github.com/mhammond/pywin32) for some Windows APIs interactions using Python.
 
-Script 2 : 
-Simulate key press the same way to all,
-Store start timestamp,
-Detect display modification,
-Store last timestamp,
-Compare both
+## License
 
-Should I run them in // ? Could they interfere with each others ? Won't it impact performances if there is no warmup
+[MIT License](LICENSE)
 
-### Automation
+## Acknowledgement
 
-### Optimise
-
-## Program
-## Language
-## Driver
-## OS
-## Hardware ?
-## Isolated Env ?
-## Screen Refresh Rate ?
-
-https://github.com/msaroufim/awesome-profiling
-
-### How to Debug
-# Slower CPU + GPU
-# More inputs and get average
-
-What I trie to benchmark
-- Windows Hooks
-- Windows Performance Recordre / Analyzer
-- cProfile
-- Timeit
-- Python ETW Trace ?
-
-### Related Work :
-
-https://github.com/pavelfatin/typometer
+- Analyze of the typing latency of text/code editors with relevant article (https://github.com/pavelfatin/typometer).
