@@ -1,6 +1,6 @@
 # Key to Display Latency Benchmarking (kdlab)
 
-Small project trying to evaluate the latency between a key press and its display of multiple implementations / frameworks.
+Small project trying to evaluate the latency between a key press and its display on multiple implementations / frameworks.
 
 ## Description
 
