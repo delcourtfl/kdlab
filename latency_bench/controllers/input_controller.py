@@ -2,7 +2,7 @@ from ctypes import POINTER, sizeof, WinError, get_last_error, windll, c_int
 from ctypes.wintypes import UINT, HWND, WPARAM, LPARAM, BOOL
 import time
 
-from latency_bench.struct import INPUT, KEYBDINPUT
+from latency_bench.utils.struct import INPUT, KEYBDINPUT
 
 ### These are not working properly for every cases
 # import pyautogui

@@ -6,7 +6,7 @@ import win32api
 import traceback
 import time
 
-from latency_bench.struct import KBDLLHOOKSTRUCT
+from latency_bench.utils.struct import KBDLLHOOKSTRUCT
 
 class MonitoringHook:
 
