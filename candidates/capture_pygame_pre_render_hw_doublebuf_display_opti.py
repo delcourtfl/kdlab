@@ -10,7 +10,7 @@ pygame.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 400, 400
 size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 # Hardware acceleration and double buffering
-screen = pygame.display.set_mode(size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+screen = pygame.display.set_mode(size, pygame.HWSURFACE | pygame.DOUBLEBUF, 8)
 # Disable alpha channel for better performance
 screen.set_alpha(None)
 pygame.display.set_caption("Keypress Display")
